@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="lo">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
+<title>ຮ້ານເຂົ້າກ່ອງ - ລະບົບບໍລິຫານ</title>
+<style>
+  :root {
+    --primary: #D85A30;
+    --primary-dark: #993C1D;
+    --bg: #FAF7F2;
+    --card: #ffffff;
+    --border: #eee;
+    --text: #2c2c2a;
+    --text-secondary: #888;
+    --green: #639922;
+    --red: #e24b4a;
+    --dark-green: #0f6e56;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Noto Sans Lao', 'Phetsarath OT', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  #app {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    padding-bottom: 90px;
+    position: relative;
+  }
+  button { cursor: pointer; font-family: inherit; border: none; background: none; }
+  input, select { font-family: inherit; }
+
+  /* header */
+  .header {
+    background: var(--primary);
+    color: white;
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .header h1 { font-size: 20px; font-weight: 600; }
+  .header p { font-size: 13px; opacity: 0.9; margin-top: 4px; }
+  .logout-btn {
+    border: 1px solid rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* tabs */
+  .tabs {
+    display: flex;
+    background: white;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 68px;
+    z-index: 9;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 0;
+    border-bottom: 3px solid transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .tab-btn.active { border-bottom-color: var(--primary); color: var(--primary); font-weight: 600; }
+  .tab-btn svg { width: 18px; height: 18px; }
+
+  .tab-content { padding: 16px; display: none; }
+  .tab-content.active { display: block; }
+
+  /* cards */
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 12px 14px;
+  }
+  .card + .card { margin-top: 8px; }
+  .section-title { font-size: 14px; color: #666; margin: 16px 0 8px; }
+  .section-title:first-child { margin-top: 0; }
+
+  /* menu item row (order tab) */
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    margin-bottom: 8px;
+  }
+  .item-name { font-weight: 600; font-size: 15px; }
+  .item-price { font-size: 13px; color: var(--primary); }
+  .item-stock { font-size: 11px; color: #999; }
+  .item-stock.low { color: var(--red); }
+  .qty-controls { display: flex; align-items: center; gap: 10px; }
+  .round-btn {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1px solid #ddd; background: white; font-size: 16px;
+  }
+  .round-btn.add { border: none; background: var(--primary); color: white; }
+  .round-btn.add:disabled { background: #ccc; }
+  .qty-display { min-width: 16px; text-align: center; }
+
+  /* buttons */
+  .btn-primary {
+    width: 100%; padding: 12px; background: var(--primary); color: white;
+    border-radius: 10px; font-weight: 600; font-size: 15px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-outline {
+    padding: 10px 16px; border: 1px solid #ddd; background: white; border-radius: 10px;
+  }
+
+  /* metric grid */
+  .metric-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  .metric-card { background: white; border-radius: 12px; padding: 12px; border: 1px solid var(--border); }
+  .metric-label { font-size: 11px; color: #888; }
+  .metric-value { font-size: 15px; font-weight: 700; }
+
+  .month-banner {
+    background: #2c2c2a; border-radius: 12px; padding: 14px; margin-bottom: 20px;
+    display: flex; justify-content: space-between; align-items: center; color: white;
+  }
+  .month-banner .label { font-size: 11px; color: rgba(255,255,255,0.7); }
+  .month-banner .value { font-size: 20px; font-weight: 700; }
+  .month-banner .side { text-align: right; font-size: 11px; color: rgba(255,255,255,0.7); }
+
+  .view-toggle { display: flex; gap: 8px; margin-bottom: 10px; }
+  .view-toggle button {
+    flex: 1; padding: 8px; border-radius: 8px; border: 1px solid #ddd; background: white; font-size: 13px;
+  }
+  .view-toggle button.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+  table.report-table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+  table.report-table th, table.report-table td { padding: 10px 12px; font-size: 12px; text-align: right; border-bottom: 1px solid #f5f5f5; }
+  table.report-table th { font-size: 11px; color: #888; background: #faf7f2; font-weight: 400; }
+  table.report-table th:first-child, table.report-table td:first-child { text-align: left; }
+  .empty-note { padding: 14px; font-size: 13px; color: #999; }
+
+  /* cart bar */
+  .cart-bar {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px; background: white; border-top: 1px solid var(--border);
+    padding: 14px; box-shadow: 0 -4px 12px rgba(0,0,0,0.06); display: none;
+  }
+  .cart-bar.show { display: block; }
+  .cart-summary { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+  .cart-actions { display: flex; gap: 8px; }
+  .cart-actions .btn-primary { flex: 1; }
+
+  /* modal */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+    display: none; align-items: flex-end; justify-content: center; z-index: 200;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    background: white; width: 100%; max-width: 480px;
+    border-radius: 16px 16px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header { display: flex; justify-content: space-between; margin-bottom: 16px; align-items: center; }
+  .modal-header h3 { font-size: 18px; font-weight: 600; }
+  .form-group { margin-bottom: 10px; }
+  .form-group label { font-size: 13px; color: #666; display: block; margin-bottom: 4px; }
+  .form-group input, .form-group select {
+    width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-size: 14px;
+  }
+  .form-error { color: var(--red); font-size: 13px; margin-bottom: 10px; }
+
+  /* login screens */
+  .auth-screen {
+    max-width: 480px; margin: 0 auto; min-height: 100vh; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px;
+  }
+  .auth-box { width: 100%; max-width: 320px; text-align: center; }
+  .auth-icon {
+    width: 56px; height: 56px; border-radius: 50%; background: var(--primary);
+    display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;
+  }
+  .auth-icon svg { width: 26px; height: 26px; stroke: white; }
+  .auth-box h2 { margin-bottom: 4px; font-size: 20px; }
+  .auth-box p { font-size: 13px; color: #888; margin-bottom: 20px; }
+  .auth-box input {
+    width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ddd;
+    margin-bottom: 10px; font-size: 15px; text-align: center;
+  }
+
+  .toast {
+    position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+    background: #2c2c2a; color: white; padding: 8px 16px; border-radius: 20px;
+    font-size: 13px; z-index: 300; display: none;
+  }
+  .toast.show { display: block; }
+
+  .icon { width: 18px; height: 18px; }
+  .icon-sm { width: 14px; height: 14px; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- storage helpers (localStorage) ---------- */
+const LS_KEYS = { menu: 'kg_menu', orders: 'kg_orders', expenses: 'kg_expenses', pin: 'kg_admin_pin' };
+function lsGet(key, fallback) {
+  try {
+    const v = localStorage.getItem(key);
+    return v ? JSON.parse(v) : fallback;
+  } catch (e) { return fallback; }
+}
+function lsSet(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) {}
+}
+
+/* ---------- constants ---------- */
+const CATEGORIES = ["ອາຫານປົກກະຕິ", "ອາຫານພິເສດ", "ເຄື່ອງດື່ມ", "ອື່ນໆ"];
+const EXPENSE_CATEGORIES = ["ຕົ້ນທຶນຊື້ເຄື່ອງ", "ຄ່ານ້ຳ-ໄຟ", "ອື່ນໆ"];
+const DEFAULT_MENU = [
+  { id: 1, name: "ເຂົ້າກ່ອງໝູທອດ", price: 15000, category: "ອາຫານປົກກະຕິ", stock: 20 },
+  { id: 2, name: "ເຂົ້າກ່ອງໄກ່ທອດ", price: 15000, category: "ອາຫານປົກກະຕິ", stock: 20 },
+  { id: 3, name: "ເຂົ້າກ່ອງກະເພົາໝູ", price: 15000, category: "ອາຫານປົກກະຕິ", stock: 15 },
+  { id: 4, name: "ເຂົ້າກ່ອງກຸ້ງທອດ", price: 25000, category: "ອາຫານພິເສດ", stock: 10 },
+  { id: 5, name: "ນ້ຳດື່ມ", price: 3000, category: "ເຄື່ອງດື່ມ", stock: 30 },
+];
+
+/* ---------- utils ---------- */
+function money(n) { return Number(n || 0).toLocaleString("lo-LA") + " ກີບ"; }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function monthStr(d) { return (d || todayStr()).slice(0, 7); }
+function weekStr(d) {
+  const date = new Date((d || todayStr()) + "T00:00:00");
+  const target = new Date(date.valueOf());
+  const dayNr = (date.getUTCDay() + 6) % 7;
+  target.setUTCDate(target.getUTCDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setUTCMonth(0, 1);
+  if (target.getUTCDay() !== 4) target.setUTCMonth(0, 1 + ((4 - target.getUTCDay() + 7) % 7));
+  const weekNo = 1 + Math.round((firstThursday - target.valueOf()) / (7 * 24 * 3600 * 1000));
+  return date.getUTCFullYear() + "-W" + String(weekNo).padStart(2, "0");
+}
+function weekRangeLabel(d) {
+  const date = new Date((d || todayStr()) + "T00:00:00");
+  const dayNr = (date.getUTCDay() + 6) % 7;
+  const monday = new Date(date); monday.setUTCDate(date.getUTCDate() - dayNr);
+  const sunday = new Date(monday); sunday.setUTCDate(monday.getUTCDate() + 6);
+  const fmt = (x) => String(x.getUTCDate()).padStart(2, "0") + "/" + String(x.getUTCMonth() + 1).padStart(2, "0");
+  return fmt(monday) + "-" + fmt(sunday);
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+/* ---------- icons (inline svg, stroke currentColor) ---------- */
+const ICONS = {
+  cart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>',
+  package: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>',
+  wallet: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>',
+  chart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>',
+  lock: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+  logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>',
+  edit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4Z"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>',
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+};
+
+/* ---------- state ---------- */
+let state = {
+  menu: lsGet(LS_KEYS.menu, DEFAULT_MENU),
+  orders: lsGet(LS_KEYS.orders, []),
+  expenses: lsGet(LS_KEYS.expenses, []),
+  cart: {},
+  tab: 'order',
+  reportView: 'day',
+  unlocked: false,
+};
+
+function persistMenu() { lsSet(LS_KEYS.menu, state.menu); }
+function persistOrders() { lsSet(LS_KEYS.orders, state.orders); }
+function persistExpenses() { lsSet(LS_KEYS.expenses, state.expenses); }
+
+/* ================= AUTH ================= */
+function renderAuth() {
+  const pin = lsGet(LS_KEYS.pin, "");
+  const app = document.getElementById('app');
+  if (!pin) {
+    app.innerHTML = `
+      <div class="auth-screen">
+        <div class="auth-box">
+          <div class="auth-icon">${ICONS.lock}</div>
+          <h2>ຕັ້ງລະຫັດຜ່ານແອັດມິນ</h2>
+          <p>ໃຊ້ເຂົ້າລະບົບບໍລິຫານຮ້ານເຂົ້າກ່ອງ</p>
+          <input type="password" inputmode="numeric" id="pin1" placeholder="ຕັ້ງລະຫັດຜ່ານ (ຢ່າງໜ້ອຍ 4 ໂຕ)" />
+          <input type="password" inputmode="numeric" id="pin2" placeholder="ພິມລະຫັດຜ່ານອີກຄັ້ງ" />
+          <div class="form-error" id="authErr" style="display:none;"></div>
+          <button class="btn-primary" id="setPinBtn">ຕັ້ງລະຫັດຜ່ານ</button>
+        </div>
+      </div>`;
+    document.getElementById('setPinBtn').onclick = () => {
+      const p1 = document.getElementById('pin1').value;
+      const p2 = document.getElementById('pin2').value;
+      const err = document.getElementById('authErr');
+      if (p1.length < 4) { err.textContent = "ລະຫັດຜ່ານຕ້ອງມີຢ່າງໜ້ອຍ 4 ໂຕເລກ"; err.style.display = 'block'; return; }
+      if (p1 !== p2) { err.textContent = "ລະຫັດຜ່ານບໍ່ກົງກັນ"; err.style.display = 'block'; return; }
+      lsSet(LS_KEYS.pin, p1);
+      state.unlocked = true;
+      renderApp();
+    };
+  } else {
+    app.innerHTML = `
+      <div class="auth-screen">
+        <div class="auth-box">
+          <div class="auth-icon">${ICONS.lock}</div>
+          <h2>🍱 ຮ້ານເຂົ້າກ່ອງ</h2>
+          <p>ເຂົ້າສູ່ລະບົບແອັດມິນ</p>
+          <input type="password" inputmode="numeric" id="loginPin" placeholder="ໃສ່ລະຫັດຜ່ານ" autofocus />
+          <div class="form-error" id="authErr" style="display:none;"></div>
+          <button class="btn-primary" id="loginBtn">ເຂົ້າສູ່ລະບົບ</button>
+        </div>
+      </div>`;
+    const submit = () => {
+      const input = document.getElementById('loginPin').value;
+      const err = document.getElementById('authErr');
+      if (input === pin) { state.unlocked = true; renderApp(); }
+      else { err.textContent = "ລະຫັດຜ່ານບໍ່ຖືກຕ້ອງ"; err.style.display = 'block'; document.getElementById('loginPin').value = ''; }
+    };
+    document.getElementById('loginBtn').onclick = submit;
+    document.getElementById('loginPin').addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
+  }
+}
+
+/* ================= MAIN APP ================= */
+function renderApp() {
+  if (!state.unlocked) { renderAuth(); return; }
+
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <div class="header">
+      <div>
+        <h1>🍱 ຮ້ານເຂົ້າກ່ອງ</h1>
+        <p>ລະບົບບໍລິຫານຮ້ານ (ແອັດມິນ)</p>
+      </div>
+      <button class="logout-btn" id="logoutBtn">${ICONS.logout} ອອກ</button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn" data-tab="order">${ICONS.cart}ສັ່ງອາຫານ</button>
+      <button class="tab-btn" data-tab="menu">${ICONS.package}ເມນູ</button>
+      <button class="tab-btn" data-tab="expense">${ICONS.wallet}ລາຍຈ່າຍ</button>
+      <button class="tab-btn" data-tab="report">${ICONS.chart}ລາຍງານ</button>
+    </div>
+    <div class="tab-content" id="tab-order"></div>
+    <div class="tab-content" id="tab-menu"></div>
+    <div class="tab-content" id="tab-expense"></div>
+    <div class="tab-content" id="tab-report"></div>
+    <div class="cart-bar" id="cartBar"></div>
+  `;
+  document.getElementById('logoutBtn').onclick = () => { state.unlocked = false; renderAuth(); };
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.onclick = () => { state.tab = btn.dataset.tab; updateTabs(); };
+  });
+  updateTabs();
+}
+
+function updateTabs() {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === state.tab));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-' + state.tab).classList.add('active');
+  if (state.tab === 'order') renderOrderTab();
+  if (state.tab === 'menu') renderMenuTab();
+  if (state.tab === 'expense') renderExpenseTab();
+  if (state.tab === 'report') renderReportTab();
+  renderCartBar();
+}
+
+/* ================= ORDER TAB ================= */
+function renderOrderTab() {
+  const el = document.getElementById('tab-order');
+  let html = '';
+  CATEGORIES.forEach(cat => {
+    const items = state.menu.filter(m => m.category === cat);
+    if (items.length === 0) return;
+    html += `<h3 class="section-title">${escapeHtml(cat)}</h3>`;
+    items.forEach(item => {
+      const qty = state.cart[item.id] || 0;
+      const low = item.stock <= 3;
+      html += `
+        <div class="item-row">
+          <div>
+            <div class="item-name">${escapeHtml(item.name)}</div>
+            <div class="item-price">${money(item.price)}</div>
+            <div class="item-stock ${low ? 'low' : ''}">ເຫຼືອ ${item.stock} ອັນ</div>
+          </div>
+          <div class="qty-controls">
+            ${qty > 0 ? `<button class="round-btn" data-dec="${item.id}">-</button><span class="qty-display">${qty}</span>` : ''}
+            <button class="round-btn add" data-add="${item.id}" ${item.stock <= 0 ? 'disabled' : ''}>${ICONS.plus}</button>
+          </div>
+        </div>`;
+    });
+  });
+  el.innerHTML = html || '<p class="empty-note">ຍັງບໍ່ມີເມນູ</p>';
+  el.querySelectorAll('[data-add]').forEach(b => b.onclick = () => addToCart(Number(b.dataset.add)));
+  el.querySelectorAll('[data-dec]').forEach(b => b.onclick = () => decFromCart(Number(b.dataset.dec)));
+}
+
+function addToCart(id) {
+  const item = state.menu.find(m => m.id === id);
+  const curQty = state.cart[id] || 0;
+  if (item.stock !== null && item.stock !== undefined && curQty >= item.stock) {
+    showToast("ເຄື່ອງບໍ່ພໍໃນສາງ");
+    return;
+  }
+  state.cart[id] = curQty + 1;
+  renderOrderTab();
+  renderCartBar();
+}
+function decFromCart(id) {
+  if (!state.cart[id]) return;
+  state.cart[id] -= 1;
+  if (state.cart[id] <= 0) delete state.cart[id];
+  renderOrderTab();
+  renderCartBar();
+}
+function getCartItems() {
+  return Object.entries(state.cart).map(([id, qty]) => {
+    const m = state.menu.find(x => x.id === Number(id));
+    return m ? { menuId: m.id, name: m.name, price: m.price, qty } : null;
+  }).filter(Boolean);
+}
+function renderCartBar() {
+  const bar = document.getElementById('cartBar');
+  if (!bar) return;
+  if (state.tab !== 'order') { bar.classList.remove('show'); return; }
+  const items = getCartItems();
+  if (items.length === 0) { bar.classList.remove('show'); return; }
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const count = items.reduce((s, i) => s + i.qty, 0);
+  bar.classList.add('show');
+  bar.innerHTML = `
+    <div class="cart-summary"><span>${count} ລາຍການ</span><span style="font-weight:700">${money(total)}</span></div>
+    <div class="cart-actions">
+      <button class="btn-outline" id="clearCartBtn">ລ້າງ</button>
+      <button class="btn-primary" id="checkoutBtn">ຢືນຢັນອໍເດີ</button>
+    </div>`;
+  document.getElementById('clearCartBtn').onclick = () => { state.cart = {}; renderOrderTab(); renderCartBar(); };
+  document.getElementById('checkoutBtn').onclick = checkout;
+}
+function checkout() {
+  const items = getCartItems();
+  if (items.length === 0) return;
+  const total = items.reduce((s, i) => s + i.price * i.qty, 0);
+  const order = { id: Date.now(), items, total, time: new Date().toISOString() };
+  state.orders.unshift(order);
+  state.menu = state.menu.map(item => {
+    const found = state.cart[item.id];
+    if (found && item.stock !== null && item.stock !== undefined) {
+      return { ...item, stock: Math.max(0, item.stock - found) };
+    }
+    return item;
+  });
+  persistOrders(); persistMenu();
+  state.cart = {};
+  renderOrderTab(); renderCartBar();
+  showToast("ບັນທຶກອໍເດີແລ້ວ");
+}
+
+/* ================= MENU TAB ================= */
+function renderMenuTab() {
+  const el = document.getElementById('tab-menu');
+  let html = `<button class="btn-primary" id="addMenuBtn" style="margin-bottom:16px;">${ICONS.plus} ເພີ່ມເມນູໃໝ່</button>`;
+  state.menu.forEach(item => {
+    html += `
+      <div class="item-row">
+        <div>
+          <div class="item-name">${escapeHtml(item.name)}</div>
+          <div style="font-size:13px;color:#666;">${money(item.price)} · ${escapeHtml(item.category)} · ສາງ: ${item.stock}</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="round-btn" style="border:none;background:#f0eee8;" data-edit-menu="${item.id}">${ICONS.edit}</button>
+          <button class="round-btn" style="border:none;background:#fcebeb;color:var(--red);" data-del-menu="${item.id}">${ICONS.trash}</button>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+  document.getElementById('addMenuBtn').onclick = () => openMenuForm(null);
+  el.querySelectorAll('[data-edit-menu]').forEach(b => b.onclick = () => openMenuForm(Number(b.dataset.editMenu)));
+  el.querySelectorAll('[data-del-menu]').forEach(b => b.onclick = () => {
+    state.menu = state.menu.filter(x => x.id !== Number(b.dataset.delMenu));
+    persistMenu(); renderMenuTab();
+  });
+}
+
+function openMenuForm(id) {
+  const item = id ? state.menu.find(x => x.id === id) : null;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML = `
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>${item ? 'ແກ້ໄຂເມນູ' : 'ເພີ່ມເມນູໃໝ່'}</h3>
+        <button id="closeModal">${ICONS.x}</button>
+      </div>
+      <div class="form-group"><label>ຊື່ເມນູ</label><input id="fName" value="${item ? escapeHtml(item.name) : ''}" placeholder="ເຂົ້າກ່ອງໝູທອດ" /></div>
+      <div class="form-group"><label>ລາຄາ (ກີບ)</label><input id="fPrice" type="number" value="${item ? item.price : ''}" placeholder="15000" /></div>
+      <div class="form-group"><label>ໝວດໝູ່</label>
+        <select id="fCategory">${CATEGORIES.map(c => `<option value="${escapeHtml(c)}" ${item && item.category === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>ຈຳນວນໃນສາງ</label><input id="fStock" type="number" value="${item ? item.stock : 10}" /></div>
+      <div class="form-error" id="fErr" style="display:none;"></div>
+      <button class="btn-primary" id="saveMenuBtn">${ICONS.check} ບັນທຶກ</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.getElementById('closeModal').onclick = () => overlay.remove();
+  document.getElementById('saveMenuBtn').onclick = () => {
+    const name = document.getElementById('fName').value.trim();
+    const price = Number(document.getElementById('fPrice').value);
+    const category = document.getElementById('fCategory').value;
+    const stock = Number(document.getElementById('fStock').value);
+    const err = document.getElementById('fErr');
+    if (!name || !price) { err.textContent = 'ກະລຸນາໃສ່ຊື່ ແລະລາຄາໃຫ້ຄົບ'; err.style.display = 'block'; return; }
+    if (item) {
+      state.menu = state.menu.map(x => x.id === item.id ? { ...x, name, price, category, stock } : x);
+    } else {
+      state.menu.push({ id: Date.now(), name, price, category, stock });
+    }
+    persistMenu();
+    overlay.remove();
+    renderMenuTab();
+    if (state.tab === 'order') renderOrderTab();
+  };
+}
+
+/* ================= EXPENSE TAB ================= */
+function renderExpenseTab() {
+  const el = document.getElementById('tab-expense');
+  const todayExp = state.expenses.filter(e => e.date === todayStr());
+  const todayExpTotal = todayExp.reduce((s, e) => s + e.amount, 0);
+  let html = `
+    <button class="btn-primary" id="addExpenseBtn" style="margin-bottom:16px;">${ICONS.plus} ບັນທຶກລາຍຈ່າຍ</button>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="metric-label">ລາຍຈ່າຍມື້ນີ້</div>
+      <div class="metric-value" style="font-size:20px;color:var(--red);">${money(todayExpTotal)}</div>
+    </div>
+    <h3 class="section-title">ປະຫວັດລາຍຈ່າຍ</h3>`;
+  if (state.expenses.length === 0) html += '<p class="empty-note">ຍັງບໍ່ມີລາຍຈ່າຍ</p>';
+  state.expenses.forEach(e => {
+    html += `
+      <div class="item-row">
+        <div>
+          <div class="item-name">${escapeHtml(e.name)}</div>
+          <div style="font-size:12px;color:#999;">${escapeHtml(e.category)} · ${e.date}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-weight:700;color:var(--red);">${money(e.amount)}</span>
+          <button class="round-btn" style="border:none;background:#f0eee8;" data-edit-exp="${e.id}">${ICONS.edit}</button>
+          <button class="round-btn" style="border:none;background:#fcebeb;color:var(--red);" data-del-exp="${e.id}">${ICONS.trash}</button>
+        </div>
+      </div>`;
+  });
+  el.innerHTML = html;
+  document.getElementById('addExpenseBtn').onclick = () => openExpenseForm(null);
+  el.querySelectorAll('[data-edit-exp]').forEach(b => b.onclick = () => openExpenseForm(Number(b.dataset.editExp)));
+  el.querySelectorAll('[data-del-exp]').forEach(b => b.onclick = () => {
+    state.expenses = state.expenses.filter(x => x.id !== Number(b.dataset.delExp));
+    persistExpenses(); renderExpenseTab();
+  });
+}
+
+function openExpenseForm(id) {
+  const item = id ? state.expenses.find(x => x.id === id) : null;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay show';
+  overlay.innerHTML = `
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <h3>${item ? 'ແກ້ໄຂລາຍຈ່າຍ' : 'ບັນທຶກລາຍຈ່າຍໃໝ່'}</h3>
+        <button id="closeModal">${ICONS.x}</button>
+      </div>
+      <div class="form-group"><label>ລາຍການ</label><input id="fName" value="${item ? escapeHtml(item.name) : ''}" placeholder="ຊື້ຜັກ, ຊື້ໝູ, ..." /></div>
+      <div class="form-group"><label>ຈຳນວນເງິນ (ກີບ)</label><input id="fAmount" type="number" value="${item ? item.amount : ''}" placeholder="50000" /></div>
+      <div class="form-group"><label>ປະເພດລາຍຈ່າຍ</label>
+        <select id="fCategory">${EXPENSE_CATEGORIES.map(c => `<option value="${escapeHtml(c)}" ${item && item.category === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}</select>
+      </div>
+      <div class="form-group"><label>ວັນທີ</label><input id="fDate" type="date" value="${item ? item.date : todayStr()}" /></div>
+      <div class="form-error" id="fErr" style="display:none;"></div>
+      <button class="btn-primary" id="saveExpenseBtn">${ICONS.check} ບັນທຶກ</button>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+  document.getElementById('closeModal').onclick = () => overlay.remove();
+  document.getElementById('saveExpenseBtn').onclick = () => {
+    const name = document.getElementById('fName').value.trim();
+    const amount = Number(document.getElementById('fAmount').value);
+    const category = document.getElementById('fCategory').value;
+    const date = document.getElementById('fDate').value || todayStr();
+    const err = document.getElementById('fErr');
+    if (!name || !amount) { err.textContent = 'ກະລຸນາໃສ່ລາຍການ ແລະຈຳນວນເງິນໃຫ້ຄົບ'; err.style.display = 'block'; return; }
+    if (item) {
+      state.expenses = state.expenses.map(x => x.id === item.id ? { ...x, name, amount, category, date } : x);
+    } else {
+      state.expenses.unshift({ id: Date.now(), name, amount, category, date });
+    }
+    persistExpenses();
+    overlay.remove();
+    renderExpenseTab();
+  };
+}
+
+/* ================= REPORT TAB ================= */
+function renderReportTab() {
+  const el = document.getElementById('tab-report');
+
+  const todayOrders = state.orders.filter(o => o.time.slice(0, 10) === todayStr());
+  const todayTotal = todayOrders.reduce((s, o) => s + o.total, 0);
+  const todayExp = state.expenses.filter(e => e.date === todayStr());
+  const todayExpTotal = todayExp.reduce((s, e) => s + e.amount, 0);
+  const todayProfit = todayTotal - todayExpTotal;
+
+  const itemSales = {};
+  todayOrders.forEach(o => o.items.forEach(i => { itemSales[i.name] = (itemSales[i.name] || 0) + i.qty; }));
+  const topItems = Object.entries(itemSales).sort((a, b) => b[1] - a[1]).slice(0, 5);
+
+  // day map
+  const dayMap = {};
+  state.orders.forEach(o => {
+    const d = o.time.slice(0, 10);
+    dayMap[d] = dayMap[d] || { date: d, revenue: 0, expense: 0 };
+    dayMap[d].revenue += o.total;
+  });
+  state.expenses.forEach(e => {
+    dayMap[e.date] = dayMap[e.date] || { date: e.date, revenue: 0, expense: 0 };
+    dayMap[e.date].expense += e.amount;
+  });
+  const dailySummary = Object.values(dayMap).sort((a, b) => b.date.localeCompare(a.date));
+
+  // week map
+  const weekMap = {};
+  state.orders.forEach(o => {
+    const d = o.time.slice(0, 10);
+    const w = weekStr(d);
+    weekMap[w] = weekMap[w] || { week: w, label: weekRangeLabel(d), revenue: 0, expense: 0 };
+    weekMap[w].revenue += o.total;
+  });
+  state.expenses.forEach(e => {
+    const w = weekStr(e.date);
+    weekMap[w] = weekMap[w] || { week: w, label: weekRangeLabel(e.date), revenue: 0, expense: 0 };
+    weekMap[w].expense += e.amount;
+  });
+  const weeklySummary = Object.values(weekMap).sort((a, b) => b.week.localeCompare(a.week));
+
+  // month map
+  const monthMap = {};
+  state.orders.forEach(o => {
+    const m = monthStr(o.time.slice(0, 10));
+    monthMap[m] = monthMap[m] || { month: m, revenue: 0, expense: 0 };
+    monthMap[m].revenue += o.total;
+  });
+  state.expenses.forEach(e => {
+    const m = monthStr(e.date);
+    monthMap[m] = monthMap[m] || { month: m, revenue: 0, expense: 0 };
+    monthMap[m].expense += e.amount;
+  });
+  const monthlySummary = Object.values(monthMap).sort((a, b) => b.month.localeCompare(a.month));
+
+  const curMonthRow = monthlySummary.find(m => m.month === monthStr(todayStr()));
+  const curMonthProfit = curMonthRow ? curMonthRow.revenue - curMonthRow.expense : 0;
+  const curMonthRevenue = curMonthRow ? curMonthRow.revenue : 0;
+  const curMonthExpense = curMonthRow ? curMonthRow.expense : 0;
+
+  let html = `
+    <div class="metric-grid">
+      <div class="metric-card"><div class="metric-label">ລາຍຮັບມື້ນີ້</div><div class="metric-value" style="color:var(--green);">${money(todayTotal)}</div></div>
+      <div class="metric-card"><div class="metric-label">ລາຍຈ່າຍມື້ນີ້</div><div class="metric-value" style="color:var(--red);">${money(todayExpTotal)}</div></div>
+      <div class="metric-card"><div class="metric-label">ກຳໄລມື້ນີ້</div><div class="metric-value" style="color:${todayProfit >= 0 ? 'var(--dark-green)' : 'var(--red)'};">${money(todayProfit)}</div></div>
+    </div>
+    <div class="month-banner">
+      <div>
+        <div class="label">ກຳໄລເດືອນນີ້ (${monthStr(todayStr())})</div>
+        <div class="value" style="color:${curMonthProfit >= 0 ? '#97C459' : '#F09595'};">${money(curMonthProfit)}</div>
+      </div>
+      <div class="side">
+        <div>ຮັບ ${curMonthRevenue.toLocaleString('lo-LA')}</div>
+        <div>ຈ່າຍ ${curMonthExpense.toLocaleString('lo-LA')}</div>
+      </div>
+    </div>
+    <div class="view-toggle">
+      <button data-view="day" class="${state.reportView === 'day' ? 'active' : ''}">ແຕ່ລະມື້</button>
+      <button data-view="week" class="${state.reportView === 'week' ? 'active' : ''}">ແຕ່ລະອາທິດ</button>
+      <button data-view="month" class="${state.reportView === 'month' ? 'active' : ''}">ແຕ່ລະເດືອນ</button>
+    </div>
+    <table class="report-table">
+      <thead><tr>
+        <th>${state.reportView === 'day' ? 'ວັນທີ' : state.reportView === 'week' ? 'ອາທິດ' : 'ເດືອນ'}</th>
+        <th>ລາຍຮັບ</th><th>ລາຍຈ່າຍ</th><th>ກຳໄລ</th>
+      </tr></thead>
+      <tbody>`;
+  const rows = state.reportView === 'day' ? dailySummary : state.reportView === 'week' ? weeklySummary : monthlySummary;
+  if (rows.length === 0) {
+    html += `<tr><td colspan="4" class="empty-note">ຍັງບໍ່ມີຂໍ້ມູນ</td></tr>`;
+  } else {
+    rows.forEach(row => {
+      const profit = row.revenue - row.expense;
+      const label = row.date || row.label || row.month;
+      html += `<tr>
+        <td>${label}</td>
+        <td style="color:var(--green);">${row.revenue.toLocaleString('lo-LA')}</td>
+        <td style="color:var(--red);">${row.expense.toLocaleString('lo-LA')}</td>
+        <td style="font-weight:600;color:${profit >= 0 ? 'var(--dark-green)' : 'var(--red)'};">${profit.toLocaleString('lo-LA')}</td>
+      </tr>`;
+    });
+  }
+  html += `</tbody></table>`;
+
+  if (topItems.length > 0) {
+    html += `<h3 class="section-title">ຂາຍດີສຸດມື້ນີ້</h3><div class="card" style="padding:0;">`;
+    topItems.forEach(([name, qty], i) => {
+      html += `<div style="display:flex;justify-content:space-between;padding:10px 14px;${i < topItems.length - 1 ? 'border-bottom:1px solid #f0f0f0;' : ''}">
+        <span>${escapeHtml(name)}</span><span style="font-weight:600;">${qty} ອັນ</span></div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<h3 class="section-title">ປະຫວັດອໍເດີ</h3>`;
+  if (state.orders.length === 0) html += '<p class="empty-note">ຍັງບໍ່ມີອໍເດີ</p>';
+  state.orders.forEach(o => {
+    html += `<div class="card" style="margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:12px;color:#999;">${new Date(o.time).toLocaleString('lo-LA')}</span>
+        <button data-del-order="${o.id}" style="color:var(--red);">${ICONS.trash}</button>
+      </div>`;
+    o.items.forEach(it => {
+      html += `<div style="font-size:13px;display:flex;justify-content:space-between;">
+        <span>${escapeHtml(it.name)} x${it.qty}</span><span>${money(it.price * it.qty)}</span></div>`;
+    });
+    html += `<div style="font-weight:700;text-align:right;margin-top:4px;">${money(o.total)}</div></div>`;
+  });
+
+  el.innerHTML = html;
+  el.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { state.reportView = b.dataset.view; renderReportTab(); });
+  el.querySelectorAll('[data-del-order]').forEach(b => b.onclick = () => {
+    state.orders = state.orders.filter(x => x.id !== Number(b.dataset.delOrder));
+    persistOrders(); renderReportTab();
+  });
+}
+
+/* ================= INIT ================= */
+renderAuth();
+</script>
+</body>
+</html>
